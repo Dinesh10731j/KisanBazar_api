@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from .models import Contact
 import json
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -16,6 +17,9 @@ def register_user(request):
                 email=data.get('email'),
                 password=make_password(data.get('password')),
             )
+
+            if User.objects.filter(email=user.email).exists():
+                return JsonResponse({'error': 'Email already exists'}, status=400)
             user.save()
             refresh = RefreshToken.for_user(user)
             return JsonResponse({
@@ -52,6 +56,24 @@ def list_user(request):
             users = User.objects.all()
             user_list = [{'id': user.id, 'username': user.username, 'email': user.email,'password':user.password} for user in users]
             return JsonResponse({'users': user_list}, status=200)
+        except ValidationError as e:
+            return JsonResponse({'error': str(e)}, status=400)
+        
+@csrf_exempt
+def contact(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            contact = Contact(
+                name=data.get('name'),
+                email=data.get('email'),
+                message=data.get('message'),
+            )
+
+            if Contact.objects.filter(email=contact.email).exists():
+                return JsonResponse({'error': 'Email already exists'}, status=400)
+            contact.save()
+            return JsonResponse({'message': 'Contact saved successfully!'}, status=201)
         except ValidationError as e:
             return JsonResponse({'error': str(e)}, status=400)
 
