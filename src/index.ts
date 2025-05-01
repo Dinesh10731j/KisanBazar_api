@@ -7,15 +7,18 @@ import UserRouter from "./users/users.routes";
 import cors from "cors";
 const server: Express = express();
 server.use(express.json());
-server.use(express.urlencoded({ extended: true }));
+server.use(globalErrorHandler);
 server.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://kisanbazar.netlify.app"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    credentials: true,
   })
 );
-server.use("/api/v1/users", UserRouter);
-server.use(globalErrorHandler);
 
+// API Routes
+server.use("/api/v1/users", UserRouter);
 
 server.listen(PORT, async (): Promise<void> => {
   try {

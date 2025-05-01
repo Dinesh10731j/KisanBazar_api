@@ -1,6 +1,6 @@
 
 import mongoose, { Schema } from 'mongoose';
-import { IUser } from '../utils/types';
+import { IUser,IContact } from '../utils/types';
 
 
 // Define the User schema
@@ -34,6 +34,23 @@ const userSchema: Schema<IUser> = new Schema(
   { timestamps: true }
 );
 
-const User = mongoose.model<IUser>('User', userSchema);
 
-export default User;
+const conatctSchema: Schema = new Schema<IContact>({
+  name: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+  },
+  message: {
+    type: String,
+    minlength: 10,
+    required: true,
+  },
+})
+
+const User = mongoose.model<IUser>('User', userSchema);
+const Contact = mongoose.model<IContact>('Contact', conatctSchema);
+export { User, Contact };

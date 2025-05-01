@@ -22,3 +22,17 @@ export const loginValidator = [
     .notEmpty()
     .withMessage("Password is required"),
 ];
+
+
+export const contactValidator = [
+  body("name")
+    .trim()
+    .notEmpty()
+    .withMessage("Name is required"),
+  body("email")
+    .isEmail()
+    .withMessage("Please provide a valid email address"),
+  body("message")
+    .isLength({ min: 10 })
+    .withMessage("Message must be at least 10 characters long"),
+];
