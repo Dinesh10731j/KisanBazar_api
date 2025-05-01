@@ -7,3 +7,12 @@ export interface IUser extends Document {
     createdAt: Date;
     updatedAt: Date;
   }
+
+
+  export interface IContact extends Document {
+    name: string;
+    email: string;
+    message: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }
