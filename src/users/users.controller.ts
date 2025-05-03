@@ -74,7 +74,16 @@ export const loginUser = async (
       { expiresIn: "1h" }
     );
 
-    res.status(200).json({ access_token: token, message: "Login successful" });
+    res
+    .cookie("access_token", token, {
+      httpOnly: true,
+      secure: true, 
+      sameSite: "lax", 
+      maxAge: 60 * 60 * 1000,
+    })
+    .status(200)
+    .json({ message: "Login successful" });
+  
   } catch (error: unknown) {
     if (error instanceof Error) {
       return next(createHttpError(500, "Server error"));
