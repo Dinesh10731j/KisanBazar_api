@@ -74,12 +74,12 @@ export const loginUser = async (
       { expiresIn: "1h" }
     );
 
-    res
-    .cookie("access_token", token, {
+    res.cookie("access_token", token, {
       httpOnly: true,
-      secure: true, 
-      sameSite: "lax", 
-      maxAge: 60 * 60 * 1000,
+      secure: true,
+      sameSite: "none", 
+      path: "/",
+      maxAge: 60 * 60 * 1000 
     })
     .status(200)
     .json({ message: "Login successful" });

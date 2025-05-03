@@ -64,12 +64,12 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
             return;
         }
         const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email, role: user.role }, Jwt_Secret, { expiresIn: "1h" });
-        res
-            .cookie("access_token", token, {
+        res.cookie("access_token", token, {
             httpOnly: true,
             secure: true,
-            sameSite: "lax",
-            maxAge: 60 * 60 * 1000,
+            sameSite: "none",
+            path: "/",
+            maxAge: 60 * 60 * 1000
         })
             .status(200)
             .json({ message: "Login successful" });
