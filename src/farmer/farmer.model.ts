@@ -7,11 +7,11 @@ const Products = new Schema<IProduct>({
         required: true,
     },
     price: {
-        type: Number,
+        type:String,
         required: true,
     },
     quantity: {
-        type: Number,
+        type: String,
         required: true,
     },
     description: {

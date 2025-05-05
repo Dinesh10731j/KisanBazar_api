@@ -24,7 +24,7 @@ exports.contactValidator = [
 exports.productValidator = [
     (0, express_validator_1.body)("name").trim().notEmpty().withMessage("Product name is required"),
     (0, express_validator_1.body)("price").isNumeric().withMessage("Price must be a number"),
-    (0, express_validator_1.body)("quantity").isNumeric().withMessage("Quantity must be a number"),
+    (0, express_validator_1.body)("quantity").isString().withMessage("Quantity must be a string"),
     (0, express_validator_1.body)("description")
         .isLength({ min: 10 })
         .withMessage("Description must be at least 10 characters long"),

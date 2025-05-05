@@ -46,7 +46,7 @@ const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             farmerId: _req.userId,
         });
         yield product.save();
-        res.status(201).json({ message: "Product added successfully", product });
+        res.status(201).json({ message: "Product added successfully" });
     }
     catch (error) {
         if (fs_1.default.existsSync(filePath)) {

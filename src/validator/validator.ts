@@ -25,7 +25,7 @@ export const contactValidator = [
 export const productValidator = [
   body("name").trim().notEmpty().withMessage("Product name is required"),
   body("price").isNumeric().withMessage("Price must be a number"),
-  body("quantity").isNumeric().withMessage("Quantity must be a number"),
+  body("quantity").isString().withMessage("Quantity must be a string"),
   body("description")
     .isLength({ min: 10 })
     .withMessage("Description must be at least 10 characters long"),
