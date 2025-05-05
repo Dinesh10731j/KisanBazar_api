@@ -5,6 +5,7 @@ const { PORT } = Configuration;
 import connectDB from "./config/db";
 import UserRouter from "./users/users.routes";
 import paymentRouter from "./payments/payments.route";
+import farmerRouter from "./farmer/farmer.routes";
 import cors from "cors";
 const server: Express = express();
 server.use(express.json());
@@ -21,6 +22,7 @@ server.use(
 // API Routes
 server.use("/api/v1/users", UserRouter);
 server.use("/api/v1/payments", paymentRouter);
+server.use("/api/v1/farmers", farmerRouter);
 
 server.listen(PORT, async (): Promise<void> => {
   try {

@@ -29,3 +29,21 @@ export interface IUser extends Document {
     paymentStatus: 'Pending' | 'Success' | 'Failed'; 
     transactionId?: string;
   }
+
+
+  export interface IProduct extends Document {
+    name: string;
+    price: number;
+    quantity: number;
+    description: string;
+    category: string;
+    imageUrl: string;
+    farmerId: Types.ObjectId; 
+    createdAt: Date;
+    updatedAt: Date;
+  }
+
+  export interface AuthRequest extends Request {
+    userId: string;
+   
+  }
