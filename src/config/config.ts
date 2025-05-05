@@ -6,8 +6,8 @@ const Configuration = {
     env:process.env.NODE_ENV,
     Jwt_Secret:process.env.JWT_SECRET,
     Cloudinary_Name:process.env.CLOUDINARY_NAME,
-    Cloudinary_Api_Key:process.env.CLOUDINARY_KEY,
-    Cloudinary_Api_Secret:process.env.CLOUDINARY_SECRET,
+    Cloudinary_Api_Key:process.env.CLOUDINARY_API_KEY,
+    Cloudinary_Api_Secret:process.env.CLOUDINARY_API_SECRET,
     Khalti_Public_Key:process.env.KHALTI_SECRET_KEY,
   };
   
