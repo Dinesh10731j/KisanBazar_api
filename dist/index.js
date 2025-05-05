@@ -21,7 +21,9 @@ const users_routes_1 = __importDefault(require("./users/users.routes"));
 const payments_route_1 = __importDefault(require("./payments/payments.route"));
 const farmer_routes_1 = __importDefault(require("./farmer/farmer.routes"));
 const cors_1 = __importDefault(require("cors"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const server = (0, express_1.default)();
+server.use((0, cookie_parser_1.default)());
 server.use(express_1.default.json());
 server.use(globalErrorMiddleware_1.default);
 server.use((0, cors_1.default)({

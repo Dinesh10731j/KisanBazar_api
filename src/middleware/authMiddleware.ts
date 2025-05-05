@@ -10,16 +10,12 @@ export const authenticateUser = (
   next: NextFunction
 ): void => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = req.cookies.access_token;
     if (!token) {
       res.status(401).json({ message: "Unauthorized", success: false });
       return;
     }
 
-    if (!token) {
-       res.status(401).json({ message: "Unauthorized", success: false });
-       return;
-    }
     const decoded = jwt.verify(token as string, Jwt_Secret as string) as JwtPayload;
     const _req = req as unknown as AuthRequest;
     _req.userId = decoded.userId as string;

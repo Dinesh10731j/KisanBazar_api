@@ -9,13 +9,8 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../config/config"));
 const { Jwt_Secret } = config_1.default;
 const authenticateUser = (req, res, next) => {
-    var _a;
     try {
-        const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
-        if (!token) {
-            res.status(401).json({ message: "Unauthorized", success: false });
-            return;
-        }
+        const token = req.cookies.access_token;
         if (!token) {
             res.status(401).json({ message: "Unauthorized", success: false });
             return;

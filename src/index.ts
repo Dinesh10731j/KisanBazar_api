@@ -7,7 +7,9 @@ import UserRouter from "./users/users.routes";
 import paymentRouter from "./payments/payments.route";
 import farmerRouter from "./farmer/farmer.routes";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 const server: Express = express();
+server.use(cookieParser());
 server.use(express.json());
 server.use(globalErrorHandler);
 server.use(

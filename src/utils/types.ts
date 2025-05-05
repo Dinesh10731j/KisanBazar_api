@@ -33,8 +33,8 @@ export interface IUser extends Document {
 
   export interface IProduct extends Document {
     name: string;
-    price: number;
-    quantity: number;
+    price: string;
+    quantity: string;
     description: string;
     category: string;
     imageUrl: string;

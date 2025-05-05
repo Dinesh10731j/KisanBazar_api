@@ -45,7 +45,7 @@ export const addProducts = async (
 
     await product.save();
 
-    res.status(201).json({ message: "Product added successfully", product });
+    res.status(201).json({ message: "Product added successfully"});
   } catch (error) {
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath); 
