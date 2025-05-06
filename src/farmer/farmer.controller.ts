@@ -24,9 +24,9 @@ export const addProducts = async (
 
   try {
     const _req = req as unknown as AuthRequest;
-    if(!_req.userId){
-        return next(createHttpError(400, "Instructor id is missing"));
-      }
+    if (!_req.userId) {
+      return next(createHttpError(400, "Instructor id is missing"));
+    }
     const uploadResult = await cloudinary.uploader.upload(filePath, {
       folder: "kisan_bazar",
       public_id: req.file.filename.split(".")[0],
@@ -45,13 +45,39 @@ export const addProducts = async (
 
     await product.save();
 
-    res.status(201).json({ message: "Product added successfully"});
+    res.status(201).json({ message: "Product added successfully" });
   } catch (error) {
     if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath); 
+      fs.unlinkSync(filePath);
     }
 
     console.error("Upload error:", error);
-    return next(createHttpError(500, "Image upload or product creation failed"));
+    return next(
+      createHttpError(500, "Image upload or product creation failed")
+    );
+  }
+};
+
+export const getProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const _req = req as unknown as AuthRequest;
+    if (!_req.userId) {
+      return next(createHttpError(400, "Instructor id is missing"));
+    }
+    const products = await Product.find({ farmerId: _req.userId });
+    if (!products) {
+      return next(createHttpError(404, "No products found"));
+    }
+    if (products.length === 0) {
+      return next(createHttpError(404, "No products found"));
+    }
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return next(createHttpError(500, "Failed to fetch products"));
   }
 };
