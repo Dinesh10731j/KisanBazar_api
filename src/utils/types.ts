@@ -47,3 +47,4 @@ export interface IUser extends Document {
     userId: string;
    
   }
+  

@@ -81,3 +81,52 @@ export const getProducts = async (
     return next(createHttpError(500, "Failed to fetch products"));
   }
 };
+
+
+export const deleteProduct = async (
+  req: Request,
+  res:Response,
+  next:NextFunction
+):Promise<void> => {
+  const { productId } = req.params;
+  try {
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+    if (!deletedProduct) {
+      return next(createHttpError(404, "Product not found"));
+    }
+    res.status(200).json({ message: "Product deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    return next(createHttpError(500, "Failed to delete product"));
+  }
+}
+
+export const updateProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const { productId } = req.params;
+  const { name, price, quantity, description } = req.body;
+
+  if (!name || !price || !quantity || !description) {
+    return next(createHttpError(400, "All fields are required"));
+  }
+
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      { name, price, quantity, description },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      return next(createHttpError(404, "Product not found"));
+    }
+
+    res.status(200).json({ message: "Product updated successfully" });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return next(createHttpError(500, "Failed to update product"));
+  }
+}

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProducts = exports.addProducts = void 0;
+exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const farmer_model_1 = __importDefault(require("./farmer.model"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
@@ -78,3 +78,37 @@ const getProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getProducts = getProducts;
+const deleteProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { productId } = req.params;
+    try {
+        const deletedProduct = yield farmer_model_1.default.findByIdAndDelete(productId);
+        if (!deletedProduct) {
+            return next((0, http_errors_1.default)(404, "Product not found"));
+        }
+        res.status(200).json({ message: "Product deleted successfully" });
+    }
+    catch (error) {
+        console.error("Error deleting product:", error);
+        return next((0, http_errors_1.default)(500, "Failed to delete product"));
+    }
+});
+exports.deleteProduct = deleteProduct;
+const updateProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { productId } = req.params;
+    const { name, price, quantity, description } = req.body;
+    if (!name || !price || !quantity || !description) {
+        return next((0, http_errors_1.default)(400, "All fields are required"));
+    }
+    try {
+        const updatedProduct = yield farmer_model_1.default.findByIdAndUpdate(productId, { name, price, quantity, description }, { new: true });
+        if (!updatedProduct) {
+            return next((0, http_errors_1.default)(404, "Product not found"));
+        }
+        res.status(200).json({ message: "Product updated successfully" });
+    }
+    catch (error) {
+        console.error("Error updating product:", error);
+        return next((0, http_errors_1.default)(500, "Failed to update product"));
+    }
+});
+exports.updateProduct = updateProduct;
