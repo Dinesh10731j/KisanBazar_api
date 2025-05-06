@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addProducts = void 0;
+exports.getProducts = exports.addProducts = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const farmer_model_1 = __importDefault(require("./farmer.model"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
@@ -57,3 +57,24 @@ const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.addProducts = addProducts;
+const getProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const _req = req;
+        if (!_req.userId) {
+            return next((0, http_errors_1.default)(400, "Instructor id is missing"));
+        }
+        const products = yield farmer_model_1.default.find({ farmerId: _req.userId });
+        if (!products) {
+            return next((0, http_errors_1.default)(404, "No products found"));
+        }
+        if (products.length === 0) {
+            return next((0, http_errors_1.default)(404, "No products found"));
+        }
+        res.status(200).json(products);
+    }
+    catch (error) {
+        console.error("Error fetching products:", error);
+        return next((0, http_errors_1.default)(500, "Failed to fetch products"));
+    }
+});
+exports.getProducts = getProducts;
