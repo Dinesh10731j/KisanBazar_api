@@ -12,13 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProfile = exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
+exports.getAllProducts = exports.updateProfile = exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const farmer_model_1 = __importDefault(require("./farmer.model"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const users_model_1 = require("../users/users.model");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, price, quantity, description } = req.body;
     if (!name || !price || !quantity || !description) {
@@ -123,8 +124,9 @@ const updateProfile = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     if (!username || !email || !password) {
         return next((0, http_errors_1.default)(400, "All fields are required"));
     }
+    const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
     try {
-        const updatedFarmer = yield users_model_1.User.findByIdAndUpdate(userId, { username, email, password }, { new: true });
+        const updatedFarmer = yield users_model_1.User.findByIdAndUpdate(userId, { username, email, password: hashedPassword }, { new: true });
         if (!updatedFarmer) {
             return next((0, http_errors_1.default)(404, "Farmer not found"));
         }
@@ -136,3 +138,20 @@ const updateProfile = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.updateProfile = updateProfile;
+const getAllProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const products = yield farmer_model_1.default.find({});
+        if (!products) {
+            return next((0, http_errors_1.default)(404, "No products found"));
+        }
+        if (products.length === 0) {
+            return next((0, http_errors_1.default)(404, "No products found"));
+        }
+        res.status(200).json(products);
+    }
+    catch (error) {
+        console.error("Error fetching products:", error);
+        return next((0, http_errors_1.default)(500, "Failed to fetch products"));
+    }
+});
+exports.getAllProducts = getAllProducts;
