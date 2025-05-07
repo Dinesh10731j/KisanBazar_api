@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { AuthRequest } from "../utils/types";
 import { User } from "../users/users.model";
+import bcrypt from "bcryptjs";
 export const addProducts = async (
   req: Request & { file?: Express.Multer.File },
   res: Response,
@@ -143,11 +144,11 @@ export const updateProfile = async (req:Request,res:Response,next:NextFunction):
   if (!username || !email || !password) {
     return next(createHttpError(400, "All fields are required"));
   }
-
+ const hashedPassword = await bcrypt.hash(password, 10);
   try {
     const updatedFarmer = await User.findByIdAndUpdate(
       userId,
-      {username, email, password},
+      {username, email, password:hashedPassword},
       { new: true }
     );
 
@@ -159,5 +160,26 @@ export const updateProfile = async (req:Request,res:Response,next:NextFunction):
   } catch (error) {
     console.error("Error updating profile:", error);
     return next(createHttpError(500, "Failed to update profile"));
+  }
+}
+
+
+export const getAllProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const products = await Product.find({});
+    if (!products) {
+      return next(createHttpError(404, "No products found"));
+    }
+    if (products.length === 0) {
+      return next(createHttpError(404, "No products found"));
+    }
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return next(createHttpError(500, "Failed to fetch products"));
   }
 }

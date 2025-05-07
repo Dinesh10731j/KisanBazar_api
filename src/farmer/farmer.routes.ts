@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addProducts,getProducts,deleteProduct,updateProduct,updateProfile } from "./farmer.controller";
+import { addProducts,getProducts,deleteProduct,updateProduct,updateProfile,getAllProducts } from "./farmer.controller";
 import upload from "../middleware/multer";
 import { productValidator,profileValidator } from "../validator/validator";
 import validate from "../middleware/validate";
@@ -39,5 +39,14 @@ farmerRouter.put(
   validate,
   updateProfile
 );
+
+farmerRouter.get(
+  '/products',
+  authenticateUser,
+  getAllProducts
+)
+
+
+
 
 export default farmerRouter;
