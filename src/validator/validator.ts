@@ -19,7 +19,7 @@ export const contactValidator = [
   body("email").isEmail().withMessage("Please provide a valid email address"),
   body("message")
     .isLength({ min: 10 })
-    .withMessage("Message must be at least 10 characters long"),
+    .withMessage("Message must be at least 10 characters long")
 ];
 
 export const productValidator = [
@@ -30,3 +30,13 @@ export const productValidator = [
     .isLength({ min: 10 })
     .withMessage("Description must be at least 10 characters long"),
 ];
+
+
+export const profileValidator=[
+  body("username").trim().notEmpty().withMessage("Name is required"),
+  body("email").isEmail().withMessage("Please provide a valid email address"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+
+]

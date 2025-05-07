@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
+exports.updateProfile = exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const farmer_model_1 = __importDefault(require("./farmer.model"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const users_model_1 = require("../users/users.model");
 const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, price, quantity, description } = req.body;
     if (!name || !price || !quantity || !description) {
@@ -112,3 +113,26 @@ const updateProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.updateProduct = updateProduct;
+const updateProfile = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { username, email, password } = req.body;
+    const _req = req;
+    const userId = _req.userId;
+    if (!userId) {
+        return next((0, http_errors_1.default)(400, "User id is missing"));
+    }
+    if (!username || !email || !password) {
+        return next((0, http_errors_1.default)(400, "All fields are required"));
+    }
+    try {
+        const updatedFarmer = yield users_model_1.User.findByIdAndUpdate(userId, { username, email, password }, { new: true });
+        if (!updatedFarmer) {
+            return next((0, http_errors_1.default)(404, "Farmer not found"));
+        }
+        res.status(200).json({ message: "Profile updated successfully" });
+    }
+    catch (error) {
+        console.error("Error updating profile:", error);
+        return next((0, http_errors_1.default)(500, "Failed to update profile"));
+    }
+});
+exports.updateProfile = updateProfile;

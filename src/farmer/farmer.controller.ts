@@ -5,6 +5,7 @@ import cloudinary from "../config/cloudinary";
 import path from "path";
 import fs from "fs";
 import { AuthRequest } from "../utils/types";
+import { User } from "../users/users.model";
 export const addProducts = async (
   req: Request & { file?: Express.Multer.File },
   res: Response,
@@ -128,5 +129,35 @@ export const updateProduct = async (
   } catch (error) {
     console.error("Error updating product:", error);
     return next(createHttpError(500, "Failed to update product"));
+  }
+}
+
+
+export const updateProfile = async (req:Request,res:Response,next:NextFunction):Promise<void> => {
+  const { username, email, password } = req.body;
+ const _req = req as unknown as AuthRequest;
+  const userId = _req.userId;
+  if (!userId) {
+    return next(createHttpError(400, "User id is missing"));
+  }
+  if (!username || !email || !password) {
+    return next(createHttpError(400, "All fields are required"));
+  }
+
+  try {
+    const updatedFarmer = await User.findByIdAndUpdate(
+      userId,
+      {username, email, password},
+      { new: true }
+    );
+
+    if (!updatedFarmer) {
+      return next(createHttpError(404, "Farmer not found"));
+    }
+
+    res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return next(createHttpError(500, "Failed to update profile"));
   }
 }
