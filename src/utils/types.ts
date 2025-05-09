@@ -23,6 +23,7 @@ export interface IUser extends Document {
     _id: Types.ObjectId;
     customerName:Types.ObjectId; 
     productIds: string[]; 
+    farmerIds:string[];
     products: { name: string; price: number; quantity: number }[]; 
     amount: number;
     paymentMethod: 'eSewa' | 'Khalti';

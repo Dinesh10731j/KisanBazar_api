@@ -75,7 +75,7 @@ export const loginUser = async (
     );
 
     res.cookie("access_token", token, {
-      httpOnly: true,
+      httpOnly:true,
       secure: true,
       sameSite: "none", 
       path: "/",
