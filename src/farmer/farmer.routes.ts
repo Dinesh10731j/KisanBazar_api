@@ -6,7 +6,8 @@ import {
   updateProduct,
   updateProfile,
   getAllProducts,
-  salesOverView
+  salesOverView,
+  getFarmerDashboard,
 } from "./farmer.controller";
 import upload from "../middleware/multer";
 import { productValidator, profileValidator } from "../validator/validator";
@@ -40,6 +41,7 @@ farmerRouter.put(
 );
 
 farmerRouter.get("/products", authenticateUser, getAllProducts);
-farmerRouter.get('/sales-overview',authenticateUser,salesOverView);
+farmerRouter.get("/sales-overview", authenticateUser, salesOverView);
+farmerRouter.get("/dashboard", authenticateUser, getFarmerDashboard);
 
 export default farmerRouter;

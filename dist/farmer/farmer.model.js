@@ -25,6 +25,11 @@ const Products = new mongoose_1.Schema({
     farmerId: {
         type: mongoose_1.Schema.Types.ObjectId,
         required: true
+    },
+    status: {
+        type: String,
+        enum: ['Success', 'Pending'],
+        default: 'Pending'
     }
 }, { timestamps: true });
 const Product = (0, mongoose_1.model)("Product", Products);

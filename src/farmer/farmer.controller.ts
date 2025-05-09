@@ -7,6 +7,7 @@ import fs from "fs";
 import { AuthRequest } from "../utils/types";
 import { User } from "../users/users.model";
 import bcrypt from "bcryptjs";
+import Order from "../payments/order.model";
 export const addProducts = async (
   req: Request & { file?: Express.Multer.File },
   res: Response,
@@ -43,6 +44,7 @@ export const addProducts = async (
       description,
       imageUrl: uploadResult.secure_url,
       farmerId: _req.userId,
+      status:'Success'
     });
 
     await product.save();
@@ -238,5 +240,65 @@ export const salesOverView = async (
   } catch (error) {
     console.error("Error generating sales overview:", error);
     return next(createHttpError(500, "Failed to generate sales overview"));
+  }
+};
+
+
+export const getFarmerDashboard = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const _req = req as unknown as AuthRequest;
+  const farmerId = _req.userId;
+
+  if (!farmerId) {
+    return next(createHttpError(400, "Farmer ID is missing"));
+  }
+
+  try {
+    const totalProducts = await Product.countDocuments({ farmerId });
+
+    const orders = await Order.find({
+      farmerIds: farmerId,
+      paymentStatus: "Success"
+    });
+
+    const totalSales = orders.reduce((acc, order) => acc + order.amount, 0);
+
+    const pendingOrders = await Order.countDocuments({
+      farmerIds: farmerId,
+      paymentStatus: "Pending"
+    });
+
+    const salesOverview = await Order.aggregate([
+      { $match: { farmerIds: farmerId, paymentStatus: "Success" } },
+      {
+        $group: {
+          _id: { $dayOfWeek: "$createdAt" },
+          total: { $sum: "$amount" },
+        },
+      },
+      {
+        $project: {
+          day: "$_id",
+          total: 1,
+          _id: 0,
+        },
+      },
+    ]);
+
+    const products = await Product.find({ farmerId }).select("name price quantity status");
+
+    res.status(200).json({
+      totalProducts,
+      totalSales,
+      pendingOrders,
+      salesOverview,
+      products,
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    return next(createHttpError(500, "Failed to fetch dashboard data"));
   }
 };

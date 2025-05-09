@@ -25,6 +25,11 @@ const Products = new Schema<IProduct>({
     farmerId:{
         type: Schema.Types.ObjectId,
         required: true
+    },
+    status:{
+        type:String,
+        enum:['Success','Pending'],
+        default:'Pending'
     }
 }, { timestamps: true });
 

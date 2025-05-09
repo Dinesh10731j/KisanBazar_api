@@ -16,5 +16,6 @@ farmerRouter.delete("/delete-product/:productId", authMiddleware_1.authenticateU
 farmerRouter.put("/update-product/:productId", authMiddleware_1.authenticateUser, farmer_controller_1.updateProduct);
 farmerRouter.put("/update-profile", authMiddleware_1.authenticateUser, validator_1.profileValidator, validate_1.default, farmer_controller_1.updateProfile);
 farmerRouter.get("/products", authMiddleware_1.authenticateUser, farmer_controller_1.getAllProducts);
-farmerRouter.get('/sales-overview', authMiddleware_1.authenticateUser, farmer_controller_1.salesOverView);
+farmerRouter.get("/sales-overview", authMiddleware_1.authenticateUser, farmer_controller_1.salesOverView);
+farmerRouter.get("/dashboard", authMiddleware_1.authenticateUser, farmer_controller_1.getFarmerDashboard);
 exports.default = farmerRouter;

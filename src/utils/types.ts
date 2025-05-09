@@ -40,6 +40,7 @@ export interface IUser extends Document {
     category: string;
     imageUrl: string;
     farmerId: Types.ObjectId; 
+    status:'Success' | 'Pending',
     createdAt: Date;
     updatedAt: Date;
   }
