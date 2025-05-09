@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllProducts = exports.updateProfile = exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
+exports.salesOverView = exports.getAllProducts = exports.updateProfile = exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const farmer_model_1 = __importDefault(require("./farmer.model"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
@@ -155,3 +155,55 @@ const getAllProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.getAllProducts = getAllProducts;
+const salesOverView = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const sales = yield farmer_model_1.default.aggregate([
+            {
+                $addFields: {
+                    numericPrice: {
+                        $convert: {
+                            input: { $replaceAll: { input: "$price", find: "kg", replacement: "" } },
+                            to: "double",
+                            onError: 0,
+                            onNull: 0,
+                        },
+                    },
+                    numericQuantity: {
+                        $convert: {
+                            input: { $replaceAll: { input: "$quantity", find: "kg", replacement: "" } },
+                            to: "int",
+                            onError: 0,
+                            onNull: 0,
+                        },
+                    },
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "farmerId",
+                    foreignField: "_id",
+                    as: "farmer",
+                },
+            },
+            {
+                $unwind: "$farmer",
+            },
+            {
+                $project: {
+                    farmerName: "$farmer.username",
+                    productName: "$name",
+                    totalPrice: "$numericPrice",
+                    totalQuantity: "$numericQuantity",
+                    date: "$createdAt",
+                },
+            },
+        ]);
+        res.status(200).json(sales);
+    }
+    catch (error) {
+        console.error("Error generating sales overview:", error);
+        return next((0, http_errors_1.default)(500, "Failed to generate sales overview"));
+    }
+});
+exports.salesOverView = salesOverView;

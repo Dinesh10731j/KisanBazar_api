@@ -10,7 +10,7 @@ export const createOrderAndInitiate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { customerName, products, paymentMethod, amount, productIds } = req.body;
+    const { customerName, products, paymentMethod, amount, productIds,farmerIds } = req.body;
 
     if (!customerName || !products || !paymentMethod || !amount || !productIds) {
       return next(createHttpError(400, 'Missing required order fields.'));
@@ -19,9 +19,11 @@ export const createOrderAndInitiate = async (
     const order = await Order.create({
       customerName,
       productIds,
+      farmerIds,
       products,
       amount,
       paymentMethod,
+    
     });
 
     if (paymentMethod === 'eSewa') {

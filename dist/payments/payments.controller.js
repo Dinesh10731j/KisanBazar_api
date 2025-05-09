@@ -19,13 +19,14 @@ const khalti_service_1 = require("./services/khalti.service");
 const http_errors_1 = __importDefault(require("http-errors"));
 const createOrderAndInitiate = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { customerName, products, paymentMethod, amount, productIds } = req.body;
+        const { customerName, products, paymentMethod, amount, productIds, farmerIds } = req.body;
         if (!customerName || !products || !paymentMethod || !amount || !productIds) {
             return next((0, http_errors_1.default)(400, 'Missing required order fields.'));
         }
         const order = yield order_model_1.default.create({
             customerName,
             productIds,
+            farmerIds,
             products,
             amount,
             paymentMethod,

@@ -183,3 +183,60 @@ export const getAllProducts = async (
     return next(createHttpError(500, "Failed to fetch products"));
   }
 }
+
+
+export const salesOverView = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const sales = await Product.aggregate([
+      {
+        $addFields: {
+          numericPrice: {
+            $convert: {
+              input: { $replaceAll: { input: "$price", find: "kg", replacement: "" } },
+              to: "double",
+              onError: 0,
+              onNull: 0,
+            },
+          },
+          numericQuantity: {
+            $convert: {
+              input: { $replaceAll: { input: "$quantity", find: "kg", replacement: "" } },
+              to: "int",
+              onError: 0,
+              onNull: 0,
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "farmerId",
+          foreignField: "_id",
+          as: "farmer",
+        },
+      },
+      {
+        $unwind: "$farmer",
+      },
+      {
+        $project: {
+          farmerName: "$farmer.username",
+          productName: "$name",
+          totalPrice: "$numericPrice",
+          totalQuantity: "$numericQuantity",
+          date: "$createdAt",
+        },
+      },
+    ]);
+    
+    res.status(200).json(sales);
+  } catch (error) {
+    console.error("Error generating sales overview:", error);
+    return next(createHttpError(500, "Failed to generate sales overview"));
+  }
+};

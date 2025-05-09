@@ -1,7 +1,15 @@
 import { Router } from "express";
-import { addProducts,getProducts,deleteProduct,updateProduct,updateProfile,getAllProducts } from "./farmer.controller";
+import {
+  addProducts,
+  getProducts,
+  deleteProduct,
+  updateProduct,
+  updateProfile,
+  getAllProducts,
+  salesOverView
+} from "./farmer.controller";
 import upload from "../middleware/multer";
-import { productValidator,profileValidator } from "../validator/validator";
+import { productValidator, profileValidator } from "../validator/validator";
 import validate from "../middleware/validate";
 import { authenticateUser } from "../middleware/authMiddleware";
 const farmerRouter = Router();
@@ -14,23 +22,14 @@ farmerRouter.post(
   addProducts
 );
 
-farmerRouter.get(
-  "/get-products",
-  authenticateUser,
-  getProducts
-);
+farmerRouter.get("/get-products", authenticateUser, getProducts);
 
 farmerRouter.delete(
   "/delete-product/:productId",
   authenticateUser,
   deleteProduct
 );
-farmerRouter.put(
-  "/update-product/:productId",
-  authenticateUser,
-  updateProduct
-
-)
+farmerRouter.put("/update-product/:productId", authenticateUser, updateProduct);
 
 farmerRouter.put(
   "/update-profile",
@@ -40,13 +39,7 @@ farmerRouter.put(
   updateProfile
 );
 
-farmerRouter.get(
-  '/products',
-  authenticateUser,
-  getAllProducts
-)
-
-
-
+farmerRouter.get("/products", authenticateUser, getAllProducts);
+farmerRouter.get('/sales-overview',authenticateUser,salesOverView);
 
 export default farmerRouter;

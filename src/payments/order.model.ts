@@ -7,6 +7,7 @@ const orderSchema = new mongoose.Schema<IOrder>({
      ref: 'User'
    },
   productIds: [{ type: String, required: true }],
+  farmerIds:[{type:mongoose.Types.ObjectId,required:true}],
   products: [{ name: String, price: Number, quantity: Number }],
   amount: { type: Number, required: true },
   paymentMethod: { type: String, enum: ['eSewa', 'Khalti','onCash'], required: true },
