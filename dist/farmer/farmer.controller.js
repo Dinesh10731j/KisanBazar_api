@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.salesOverView = exports.getAllProducts = exports.updateProfile = exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
+exports.getFarmerDashboard = exports.salesOverView = exports.getAllProducts = exports.updateProfile = exports.updateProduct = exports.deleteProduct = exports.getProducts = exports.addProducts = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const farmer_model_1 = __importDefault(require("./farmer.model"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
@@ -20,6 +20,7 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const users_model_1 = require("../users/users.model");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const order_model_1 = __importDefault(require("../payments/order.model"));
 const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, price, quantity, description } = req.body;
     if (!name || !price || !quantity || !description) {
@@ -46,6 +47,7 @@ const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             description,
             imageUrl: uploadResult.secure_url,
             farmerId: _req.userId,
+            status: 'Success'
         });
         yield product.save();
         res.status(201).json({ message: "Product added successfully" });
@@ -207,3 +209,51 @@ const salesOverView = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.salesOverView = salesOverView;
+const getFarmerDashboard = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const _req = req;
+    const farmerId = _req.userId;
+    if (!farmerId) {
+        return next((0, http_errors_1.default)(400, "Farmer ID is missing"));
+    }
+    try {
+        const totalProducts = yield farmer_model_1.default.countDocuments({ farmerId });
+        const orders = yield order_model_1.default.find({
+            farmerIds: farmerId,
+            paymentStatus: "Success"
+        });
+        const totalSales = orders.reduce((acc, order) => acc + order.amount, 0);
+        const pendingOrders = yield order_model_1.default.countDocuments({
+            farmerIds: farmerId,
+            paymentStatus: "Pending"
+        });
+        const salesOverview = yield order_model_1.default.aggregate([
+            { $match: { farmerIds: farmerId, paymentStatus: "Success" } },
+            {
+                $group: {
+                    _id: { $dayOfWeek: "$createdAt" },
+                    total: { $sum: "$amount" },
+                },
+            },
+            {
+                $project: {
+                    day: "$_id",
+                    total: 1,
+                    _id: 0,
+                },
+            },
+        ]);
+        const products = yield farmer_model_1.default.find({ farmerId }).select("name price quantity status");
+        res.status(200).json({
+            totalProducts,
+            totalSales,
+            pendingOrders,
+            salesOverview,
+            products,
+        });
+    }
+    catch (error) {
+        console.error("Dashboard error:", error);
+        return next((0, http_errors_1.default)(500, "Failed to fetch dashboard data"));
+    }
+});
+exports.getFarmerDashboard = getFarmerDashboard;
