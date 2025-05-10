@@ -10,7 +10,7 @@ const orderSchema = new mongoose_1.default.Schema({
         ref: 'User'
     },
     productIds: [{ type: String, required: true }],
-    farmerIds: [{ type: mongoose_1.default.Types.ObjectId, required: true }],
+    farmerIds: [{ type: mongoose_1.default.Types.ObjectId, required: true, ref: "Product" }],
     products: [{ name: String, price: Number, quantity: Number }],
     amount: { type: Number, required: true },
     paymentMethod: { type: String, enum: ['eSewa', 'Khalti', 'onCash'], required: true },
