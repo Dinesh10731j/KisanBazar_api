@@ -21,6 +21,7 @@ const fs_1 = __importDefault(require("fs"));
 const users_model_1 = require("../users/users.model");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const order_model_1 = __importDefault(require("../payments/order.model"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, price, quantity, description } = req.body;
     if (!name || !price || !quantity || !description) {
@@ -47,7 +48,7 @@ const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             description,
             imageUrl: uploadResult.secure_url,
             farmerId: _req.userId,
-            status: 'Success'
+            status: "Success",
         });
         yield product.save();
         res.status(201).json({ message: "Product added successfully" });
@@ -164,7 +165,9 @@ const salesOverView = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 $addFields: {
                     numericPrice: {
                         $convert: {
-                            input: { $replaceAll: { input: "$price", find: "kg", replacement: "" } },
+                            input: {
+                                $replaceAll: { input: "$price", find: "kg", replacement: "" },
+                            },
                             to: "double",
                             onError: 0,
                             onNull: 0,
@@ -172,7 +175,13 @@ const salesOverView = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                     },
                     numericQuantity: {
                         $convert: {
-                            input: { $replaceAll: { input: "$quantity", find: "kg", replacement: "" } },
+                            input: {
+                                $replaceAll: {
+                                    input: "$quantity",
+                                    find: "kg",
+                                    replacement: "",
+                                },
+                            },
                             to: "int",
                             onError: 0,
                             onNull: 0,
@@ -215,34 +224,70 @@ const getFarmerDashboard = (req, res, next) => __awaiter(void 0, void 0, void 0,
     if (!farmerId) {
         return next((0, http_errors_1.default)(400, "Farmer ID is missing"));
     }
+    const farmerObjectId = new mongoose_1.default.Types.ObjectId(farmerId);
     try {
-        const totalProducts = yield farmer_model_1.default.countDocuments({ farmerId });
+        const totalProducts = yield farmer_model_1.default.countDocuments({
+            farmerId: farmerObjectId,
+        });
         const orders = yield order_model_1.default.find({
-            farmerIds: farmerId,
-            paymentStatus: "Success"
+            farmerIds: farmerObjectId,
+            paymentStatus: "Success",
         });
+        // Sum up total sales
         const totalSales = orders.reduce((acc, order) => acc + order.amount, 0);
+        // Count pending orders
         const pendingOrders = yield order_model_1.default.countDocuments({
-            farmerIds: farmerId,
-            paymentStatus: "Pending"
+            farmerIds: farmerObjectId,
+            paymentStatus: "Pending",
         });
-        const salesOverview = yield order_model_1.default.aggregate([
-            { $match: { farmerIds: farmerId, paymentStatus: "Success" } },
+        // Sales overview aggregation by day
+        const salesOverviewRaw = yield order_model_1.default.aggregate([
+            {
+                $match: {
+                    paymentStatus: "Success",
+                    farmerIds: { $in: [farmerObjectId] },
+                },
+            },
+            {
+                $project: {
+                    dayOfWeek: { $dayOfWeek: { $toDate: "$createdAt" } },
+                    amount: 1,
+                },
+            },
             {
                 $group: {
-                    _id: { $dayOfWeek: "$createdAt" },
+                    _id: "$dayOfWeek",
                     total: { $sum: "$amount" },
                 },
             },
             {
                 $project: {
-                    day: "$_id",
+                    day: {
+                        $let: {
+                            vars: {
+                                days: ["", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+                            },
+                            in: { $arrayElemAt: ["$$days", "$_id"] },
+                        },
+                    },
                     total: 1,
-                    _id: 0,
                 },
             },
+            { $sort: { _id: 1 } },
         ]);
-        const products = yield farmer_model_1.default.find({ farmerId }).select("name price quantity status");
+        if (salesOverviewRaw.length === 0) {
+            return next((0, http_errors_1.default)(404, "Sales OverView not found"));
+        }
+        const salesOverview = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => {
+            const dayData = salesOverviewRaw.find((item) => item.day === day);
+            return {
+                day,
+                total: dayData ? dayData.total : 0,
+            };
+        });
+        const products = yield farmer_model_1.default.find({ farmerId: farmerObjectId })
+            .select("name price quantity status imageUrl")
+            .lean();
         res.status(200).json({
             totalProducts,
             totalSales,

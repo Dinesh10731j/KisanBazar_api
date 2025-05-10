@@ -8,6 +8,7 @@ import { AuthRequest } from "../utils/types";
 import { User } from "../users/users.model";
 import bcrypt from "bcryptjs";
 import Order from "../payments/order.model";
+import mongoose from "mongoose";
 export const addProducts = async (
   req: Request & { file?: Express.Multer.File },
   res: Response,
@@ -44,7 +45,7 @@ export const addProducts = async (
       description,
       imageUrl: uploadResult.secure_url,
       farmerId: _req.userId,
-      status:'Success'
+      status: "Success",
     });
 
     await product.save();
@@ -86,12 +87,11 @@ export const getProducts = async (
   }
 };
 
-
 export const deleteProduct = async (
   req: Request,
-  res:Response,
-  next:NextFunction
-):Promise<void> => {
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const { productId } = req.params;
   try {
     const deletedProduct = await Product.findByIdAndDelete(productId);
@@ -103,7 +103,7 @@ export const deleteProduct = async (
     console.error("Error deleting product:", error);
     return next(createHttpError(500, "Failed to delete product"));
   }
-}
+};
 
 export const updateProduct = async (
   req: Request,
@@ -133,12 +133,15 @@ export const updateProduct = async (
     console.error("Error updating product:", error);
     return next(createHttpError(500, "Failed to update product"));
   }
-}
+};
 
-
-export const updateProfile = async (req:Request,res:Response,next:NextFunction):Promise<void> => {
+export const updateProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const { username, email, password } = req.body;
- const _req = req as unknown as AuthRequest;
+  const _req = req as unknown as AuthRequest;
   const userId = _req.userId;
   if (!userId) {
     return next(createHttpError(400, "User id is missing"));
@@ -146,11 +149,11 @@ export const updateProfile = async (req:Request,res:Response,next:NextFunction):
   if (!username || !email || !password) {
     return next(createHttpError(400, "All fields are required"));
   }
- const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
   try {
     const updatedFarmer = await User.findByIdAndUpdate(
       userId,
-      {username, email, password:hashedPassword},
+      { username, email, password: hashedPassword },
       { new: true }
     );
 
@@ -163,8 +166,7 @@ export const updateProfile = async (req:Request,res:Response,next:NextFunction):
     console.error("Error updating profile:", error);
     return next(createHttpError(500, "Failed to update profile"));
   }
-}
-
+};
 
 export const getAllProducts = async (
   req: Request,
@@ -184,8 +186,7 @@ export const getAllProducts = async (
     console.error("Error fetching products:", error);
     return next(createHttpError(500, "Failed to fetch products"));
   }
-}
-
+};
 
 export const salesOverView = async (
   req: Request,
@@ -198,7 +199,9 @@ export const salesOverView = async (
         $addFields: {
           numericPrice: {
             $convert: {
-              input: { $replaceAll: { input: "$price", find: "kg", replacement: "" } },
+              input: {
+                $replaceAll: { input: "$price", find: "kg", replacement: "" },
+              },
               to: "double",
               onError: 0,
               onNull: 0,
@@ -206,7 +209,13 @@ export const salesOverView = async (
           },
           numericQuantity: {
             $convert: {
-              input: { $replaceAll: { input: "$quantity", find: "kg", replacement: "" } },
+              input: {
+                $replaceAll: {
+                  input: "$quantity",
+                  find: "kg",
+                  replacement: "",
+                },
+              },
               to: "int",
               onError: 0,
               onNull: 0,
@@ -235,14 +244,13 @@ export const salesOverView = async (
         },
       },
     ]);
-    
+
     res.status(200).json(sales);
   } catch (error) {
     console.error("Error generating sales overview:", error);
     return next(createHttpError(500, "Failed to generate sales overview"));
   }
 };
-
 
 export const getFarmerDashboard = async (
   req: Request,
@@ -256,39 +264,80 @@ export const getFarmerDashboard = async (
     return next(createHttpError(400, "Farmer ID is missing"));
   }
 
+  const farmerObjectId = new mongoose.Types.ObjectId(farmerId);
+
   try {
-    const totalProducts = await Product.countDocuments({ farmerId });
+    const totalProducts = await Product.countDocuments({
+      farmerId: farmerObjectId,
+    });
 
     const orders = await Order.find({
-      farmerIds: farmerId,
-      paymentStatus: "Success"
+      farmerIds: farmerObjectId,
+      paymentStatus: "Success",
     });
 
+    // Sum up total sales
     const totalSales = orders.reduce((acc, order) => acc + order.amount, 0);
 
+    // Count pending orders
     const pendingOrders = await Order.countDocuments({
-      farmerIds: farmerId,
-      paymentStatus: "Pending"
+      farmerIds: farmerObjectId,
+      paymentStatus: "Pending",
     });
 
-    const salesOverview = await Order.aggregate([
-      { $match: { farmerIds: farmerId, paymentStatus: "Success" } },
+    // Sales overview aggregation by day
+    const salesOverviewRaw = await Order.aggregate([
+      {
+        $match: {
+          paymentStatus: "Success",
+          farmerIds: { $in: [farmerObjectId] },
+        },
+      },
+      {
+        $project: {
+          dayOfWeek: { $dayOfWeek: { $toDate: "$createdAt" } },
+          amount: 1,
+        },
+      },
       {
         $group: {
-          _id: { $dayOfWeek: "$createdAt" },
+          _id: "$dayOfWeek",
           total: { $sum: "$amount" },
         },
       },
       {
         $project: {
-          day: "$_id",
+          day: {
+            $let: {
+              vars: {
+                days: ["", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+              },
+              in: { $arrayElemAt: ["$$days", "$_id"] },
+            },
+          },
           total: 1,
-          _id: 0,
         },
       },
+      { $sort: { _id: 1 } },
     ]);
 
-    const products = await Product.find({ farmerId }).select("name price quantity status");
+    if (salesOverviewRaw.length === 0) {
+      return next(createHttpError(404, "Sales OverView not found"));
+    }
+
+    const salesOverview = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+      (day) => {
+        const dayData = salesOverviewRaw.find((item) => item.day === day);
+        return {
+          day,
+          total: dayData ? dayData.total : 0,
+        };
+      }
+    );
+
+    const products = await Product.find({ farmerId: farmerObjectId })
+      .select("name price quantity status imageUrl")
+      .lean();
 
     res.status(200).json({
       totalProducts,
