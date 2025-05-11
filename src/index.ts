@@ -6,6 +6,7 @@ import connectDB from "./config/db";
 import UserRouter from "./users/users.routes";
 import paymentRouter from "./payments/payments.route";
 import farmerRouter from "./farmer/farmer.routes";
+import adminRouter from "./admin/admin.routes";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 const server: Express = express();
@@ -25,6 +26,7 @@ server.use(
 server.use("/api/v1/users", UserRouter);
 server.use("/api/v1/payments", paymentRouter);
 server.use("/api/v1/farmers", farmerRouter);
+server.use("/api/v1/admin", adminRouter);
 
 server.listen(PORT, async (): Promise<void> => {
   try {
