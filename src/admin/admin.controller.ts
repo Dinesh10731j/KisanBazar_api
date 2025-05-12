@@ -72,3 +72,84 @@ export const adminDashBoard = async (
     return next(createHttpError(500, "Internal server error"));
   }
 };
+
+
+export const overView = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const totalOrders = await Order.countDocuments();
+
+    const now = new Date();
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+    const endOfLastWeek = new Date(startOfLastWeek);
+    endOfLastWeek.setDate(endOfLastWeek.getDate() + 6);
+
+    const thisWeekOrders = await Order.countDocuments({
+      createdAt: { $gte: startOfThisWeek, $lte: now },
+    });
+
+    const lastWeekOrders = await Order.countDocuments({
+      createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek },
+    });
+
+    const percentChange =
+      lastWeekOrders === 0
+        ? 100
+        : ((thisWeekOrders - lastWeekOrders) / lastWeekOrders) * 100;
+
+ 
+    const firstOrder = await Order.findOne().sort({ createdAt: 1 }).select("createdAt");
+
+    if (!firstOrder) {
+     res.status(200).json({
+        totalOrders,
+        percentChange: "0%",
+        ordersOverTime: [],
+      });
+
+      return;
+    }
+
+    const startDate = new Date(firstOrder.get('createdAt'));
+    const endDate = new Date(); // today
+
+    const ordersOverTime: { date: string; orderCount: number }[] = [];
+
+    // Loop through each day from startDate to endDate
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const day = new Date(d);
+      const start = new Date(day.toISOString().split("T")[0] + "T00:00:00.000Z");
+      const end = new Date(day.toISOString().split("T")[0] + "T23:59:59.999Z");
+
+      const count = await Order.countDocuments({
+        createdAt: { $gte: start, $lte: end },
+      });
+
+      ordersOverTime.push({
+        date: day.toISOString().split("T")[0],
+        orderCount: count,
+      });
+    }
+
+    res.status(200).json({
+      totalOrders,
+      percentChange: `${percentChange >= 0 ? "+" : ""}${percentChange.toFixed(2)}%`,
+      ordersOverTime,
+    });
+  } catch (error) {
+    console.error(error);
+    return next(createHttpError(500, "Internal server error"));
+  }
+};

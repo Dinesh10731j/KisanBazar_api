@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.adminDashBoard = void 0;
+exports.overView = exports.adminDashBoard = void 0;
 const order_model_1 = __importDefault(require("../payments/order.model"));
 const users_model_1 = require("../users/users.model");
 const farmer_model_1 = __importDefault(require("../farmer/farmer.model"));
@@ -75,3 +75,60 @@ const adminDashBoard = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.adminDashBoard = adminDashBoard;
+const overView = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const totalOrders = yield order_model_1.default.countDocuments();
+        const now = new Date();
+        const startOfThisWeek = new Date(now);
+        startOfThisWeek.setDate(now.getDate() - now.getDay());
+        const startOfLastWeek = new Date(startOfThisWeek);
+        startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+        const endOfLastWeek = new Date(startOfLastWeek);
+        endOfLastWeek.setDate(endOfLastWeek.getDate() + 6);
+        const thisWeekOrders = yield order_model_1.default.countDocuments({
+            createdAt: { $gte: startOfThisWeek, $lte: now },
+        });
+        const lastWeekOrders = yield order_model_1.default.countDocuments({
+            createdAt: { $gte: startOfLastWeek, $lte: endOfLastWeek },
+        });
+        const percentChange = lastWeekOrders === 0
+            ? 100
+            : ((thisWeekOrders - lastWeekOrders) / lastWeekOrders) * 100;
+        // Get the earliest order date
+        const firstOrder = yield order_model_1.default.findOne().sort({ createdAt: 1 }).select("createdAt");
+        if (!firstOrder) {
+            res.status(200).json({
+                totalOrders,
+                percentChange: "0%",
+                ordersOverTime: [],
+            });
+            return;
+        }
+        const startDate = new Date(firstOrder.get('createdAt'));
+        const endDate = new Date(); // today
+        const ordersOverTime = [];
+        // Loop through each day from startDate to endDate
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const day = new Date(d);
+            const start = new Date(day.toISOString().split("T")[0] + "T00:00:00.000Z");
+            const end = new Date(day.toISOString().split("T")[0] + "T23:59:59.999Z");
+            const count = yield order_model_1.default.countDocuments({
+                createdAt: { $gte: start, $lte: end },
+            });
+            ordersOverTime.push({
+                date: day.toISOString().split("T")[0],
+                orderCount: count,
+            });
+        }
+        res.status(200).json({
+            totalOrders,
+            percentChange: `${percentChange >= 0 ? "+" : ""}${percentChange.toFixed(2)}%`,
+            ordersOverTime,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        return next((0, http_errors_1.default)(500, "Internal server error"));
+    }
+});
+exports.overView = overView;
