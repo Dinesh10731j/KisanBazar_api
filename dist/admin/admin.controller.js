@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.overView = exports.adminDashBoard = void 0;
+exports.deleteUser = exports.changeUserRole = exports.manageUsers = exports.overView = exports.adminDashBoard = void 0;
 const order_model_1 = __importDefault(require("../payments/order.model"));
 const users_model_1 = require("../users/users.model");
 const farmer_model_1 = __importDefault(require("../farmer/farmer.model"));
@@ -94,7 +94,6 @@ const overView = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         const percentChange = lastWeekOrders === 0
             ? 100
             : ((thisWeekOrders - lastWeekOrders) / lastWeekOrders) * 100;
-        // Get the earliest order date
         const firstOrder = yield order_model_1.default.findOne().sort({ createdAt: 1 }).select("createdAt");
         if (!firstOrder) {
             res.status(200).json({
@@ -132,3 +131,55 @@ const overView = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.overView = overView;
+const manageUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const users = yield users_model_1.User.find().select("username email role");
+        res.status(200).json({
+            success: true,
+            users,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        return next((0, http_errors_1.default)(500, "Internal server error"));
+    }
+});
+exports.manageUsers = manageUsers;
+const changeUserRole = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    const { role } = req.body;
+    if (!role || !["admin", "farmer", "user"].includes(role)) {
+        res.status(400).json({ message: "Invalid or missing role." });
+        return;
+    }
+    try {
+        const user = yield users_model_1.User.findByIdAndUpdate(id, { role }, { new: true });
+        if (!user) {
+            res.status(404).json({ message: "User not found." });
+            return;
+        }
+        res.status(200).json({
+            message: "User role updated successfully",
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.changeUserRole = changeUserRole;
+// DELETE /api/users/:id - Delete user
+const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const user = yield users_model_1.User.findByIdAndDelete(id);
+        if (!user) {
+            res.status(404).json({ message: "User not found." });
+            return;
+        }
+        res.status(200).json({ message: "User deleted successfully" });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.deleteUser = deleteUser;

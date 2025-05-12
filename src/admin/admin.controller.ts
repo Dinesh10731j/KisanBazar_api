@@ -153,3 +153,78 @@ export const overView = async (
     return next(createHttpError(500, "Internal server error"));
   }
 };
+
+
+export const manageUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const users = await User.find().select("username email role");
+
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.error(error);
+    return next(createHttpError(500, "Internal server error"));
+  }
+};
+
+
+export const changeUserRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const { id } = req.params;
+  const { role } = req.body;
+
+  if (!role || !["admin", "farmer", "user"].includes(role)) {
+    res.status(400).json({ message: "Invalid or missing role." });
+    return;
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true }
+    );
+
+    if (!user) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+
+    res.status(200).json({
+      message: "User role updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/users/:id - Delete user
+export const deleteUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
