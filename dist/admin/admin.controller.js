@@ -12,11 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Orders = exports.deleteUser = exports.changeUserRole = exports.manageUsers = exports.overView = exports.adminDashBoard = void 0;
+exports.adminSetting = exports.Orders = exports.deleteUser = exports.changeUserRole = exports.manageUsers = exports.overView = exports.adminDashBoard = void 0;
 const order_model_1 = __importDefault(require("../payments/order.model"));
 const users_model_1 = require("../users/users.model");
 const farmer_model_1 = __importDefault(require("../farmer/farmer.model"));
 const http_errors_1 = __importDefault(require("http-errors"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const adminDashBoard = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -41,7 +42,9 @@ const adminDashBoard = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                 ordersOverTime: [],
             });
         }
-        const startDate = firstOrder ? new Date(firstOrder.get('createdAt')) : new Date();
+        const startDate = firstOrder
+            ? new Date(firstOrder.get("createdAt"))
+            : new Date();
         const ordersOverTime = [];
         for (let i = 0; i < 7; i++) {
             const day = new Date(startDate);
@@ -53,7 +56,9 @@ const adminDashBoard = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                     $gte: start,
                     $lte: end,
                 },
-            }).select("_id customerName productIds farmerIds products amount paymentMethod paymentStatus createdAt").lean();
+            })
+                .select("_id customerName productIds farmerIds products amount paymentMethod paymentStatus createdAt")
+                .lean();
             ordersOverTime.push({
                 date: day.toISOString().split("T")[0],
                 orders,
@@ -94,7 +99,9 @@ const overView = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         const percentChange = lastWeekOrders === 0
             ? 100
             : ((thisWeekOrders - lastWeekOrders) / lastWeekOrders) * 100;
-        const firstOrder = yield order_model_1.default.findOne().sort({ createdAt: 1 }).select("createdAt");
+        const firstOrder = yield order_model_1.default.findOne()
+            .sort({ createdAt: 1 })
+            .select("createdAt");
         if (!firstOrder) {
             res.status(200).json({
                 totalOrders,
@@ -103,7 +110,7 @@ const overView = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             });
             return;
         }
-        const startDate = new Date(firstOrder.get('createdAt'));
+        const startDate = new Date(firstOrder.get("createdAt"));
         const endDate = new Date(); // today
         const ordersOverTime = [];
         // Loop through each day from startDate to endDate
@@ -191,17 +198,17 @@ const Orders = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
             .populate("farmerIds", "username");
         const formattedOrders = orders.map((order) => {
             const buyerName = order.customerId &&
-                typeof order.customerId === 'object' &&
-                'username' in order.customerId
+                typeof order.customerId === "object" &&
+                "username" in order.customerId
                 ? order.customerId.username
                 : "Unknown Buyer";
             const products = order.products.map((product, index) => {
                 const productData = order.productIds[index];
-                const imageUrl = (productData === null || productData === void 0 ? void 0 : productData.imageUrl) || '';
+                const imageUrl = (productData === null || productData === void 0 ? void 0 : productData.imageUrl) || "";
                 const farmer = order.farmerIds[index];
-                const farmerName = (farmer &&
-                    typeof farmer === 'object' &&
-                    'username' in farmer) ? farmer.username : 'Unknown Farmer';
+                const farmerName = farmer && typeof farmer === "object" && "username" in farmer
+                    ? farmer.username
+                    : "Unknown Farmer";
                 return {
                     productName: product.name,
                     amount: product.price * product.quantity,
@@ -219,8 +226,39 @@ const Orders = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
         res.status(200).json(formattedOrders);
     }
     catch (error) {
-        console.error('Failed to get order overview:', error);
-        next((0, http_errors_1.default)(500, 'Internal server error'));
+        console.error("Failed to get order overview:", error);
+        next((0, http_errors_1.default)(500, "Internal server error"));
     }
 });
 exports.Orders = Orders;
+const adminSetting = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { adminName, email, password } = req.body;
+    const { userId } = req.params;
+    const missingFields = [];
+    if (!adminName)
+        missingFields.push("adminName");
+    if (!email)
+        missingFields.push("email");
+    if (!password)
+        missingFields.push("password");
+    if (!userId)
+        missingFields.push("userId");
+    if (missingFields.length > 0) {
+        return next((0, http_errors_1.default)(400, `Missing required fields: ${missingFields.join(", ")}`));
+    }
+    try {
+        const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
+        const updateSetting = yield users_model_1.User.findByIdAndUpdate({ _id: userId }, { username: adminName, email, password: hashedPassword });
+        if (!updateSetting)
+            res.status(404).json({ message: "User not found", success: false });
+        res
+            .status(200)
+            .json({ message: "Profile updated successfully", success: true });
+        return;
+    }
+    catch (error) {
+        console.error(error);
+        return next((0, http_errors_1.default)(500, "Internal server error"));
+    }
+});
+exports.adminSetting = adminSetting;

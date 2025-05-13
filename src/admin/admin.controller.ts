@@ -4,7 +4,8 @@ import { User } from "../users/users.model";
 import Product from "../farmer/farmer.model";
 import createHttpError from "http-errors";
 import { IOrder } from "../utils/types";
-import mongoose from "mongoose"
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 export const adminDashBoard = async (
   req: Request,
   res: Response,
@@ -21,7 +22,6 @@ export const adminDashBoard = async (
     const totalProducts = await Product.countDocuments();
     const totalCustomers = await User.countDocuments({ role: "user" });
 
- 
     const firstOrder = await Order.findOne().sort({ createdAt: 1 });
 
     if (!firstOrder) {
@@ -36,14 +36,18 @@ export const adminDashBoard = async (
       });
     }
 
-    const startDate = firstOrder ? new Date(firstOrder.get('createdAt')) : new Date();
+    const startDate = firstOrder
+      ? new Date(firstOrder.get("createdAt"))
+      : new Date();
     const ordersOverTime = [];
 
     for (let i = 0; i < 7; i++) {
       const day = new Date(startDate);
       day.setDate(day.getDate() + i);
 
-      const start = new Date(day.toISOString().split("T")[0] + "T00:00:00.000Z");
+      const start = new Date(
+        day.toISOString().split("T")[0] + "T00:00:00.000Z"
+      );
       const end = new Date(day.toISOString().split("T")[0] + "T23:59:59.999Z");
 
       const orders = await Order.find({
@@ -51,7 +55,11 @@ export const adminDashBoard = async (
           $gte: start,
           $lte: end,
         },
-      }).select("_id customerName productIds farmerIds products amount paymentMethod paymentStatus createdAt").lean();
+      })
+        .select(
+          "_id customerName productIds farmerIds products amount paymentMethod paymentStatus createdAt"
+        )
+        .lean();
 
       ordersOverTime.push({
         date: day.toISOString().split("T")[0],
@@ -73,7 +81,6 @@ export const adminDashBoard = async (
     return next(createHttpError(500, "Internal server error"));
   }
 };
-
 
 export const overView = async (
   req: Request,
@@ -106,11 +113,12 @@ export const overView = async (
         ? 100
         : ((thisWeekOrders - lastWeekOrders) / lastWeekOrders) * 100;
 
- 
-    const firstOrder = await Order.findOne().sort({ createdAt: 1 }).select("createdAt");
+    const firstOrder = await Order.findOne()
+      .sort({ createdAt: 1 })
+      .select("createdAt");
 
     if (!firstOrder) {
-     res.status(200).json({
+      res.status(200).json({
         totalOrders,
         percentChange: "0%",
         ordersOverTime: [],
@@ -119,7 +127,7 @@ export const overView = async (
       return;
     }
 
-    const startDate = new Date(firstOrder.get('createdAt'));
+    const startDate = new Date(firstOrder.get("createdAt"));
     const endDate = new Date(); // today
 
     const ordersOverTime: { date: string; orderCount: number }[] = [];
@@ -131,7 +139,9 @@ export const overView = async (
       d.setDate(d.getDate() + 1)
     ) {
       const day = new Date(d);
-      const start = new Date(day.toISOString().split("T")[0] + "T00:00:00.000Z");
+      const start = new Date(
+        day.toISOString().split("T")[0] + "T00:00:00.000Z"
+      );
       const end = new Date(day.toISOString().split("T")[0] + "T23:59:59.999Z");
 
       const count = await Order.countDocuments({
@@ -146,7 +156,9 @@ export const overView = async (
 
     res.status(200).json({
       totalOrders,
-      percentChange: `${percentChange >= 0 ? "+" : ""}${percentChange.toFixed(2)}%`,
+      percentChange: `${percentChange >= 0 ? "+" : ""}${percentChange.toFixed(
+        2
+      )}%`,
       ordersOverTime,
     });
   } catch (error) {
@@ -154,7 +166,6 @@ export const overView = async (
     return next(createHttpError(500, "Internal server error"));
   }
 };
-
 
 export const manageUsers = async (
   req: Request,
@@ -174,7 +185,6 @@ export const manageUsers = async (
   }
 };
 
-
 export const changeUserRole = async (
   req: Request,
   res: Response,
@@ -189,11 +199,7 @@ export const changeUserRole = async (
   }
 
   try {
-    const user = await User.findByIdAndUpdate(
-      id,
-      { role },
-      { new: true }
-    );
+    const user = await User.findByIdAndUpdate(id, { role }, { new: true });
 
     if (!user) {
       res.status(404).json({ message: "User not found." });
@@ -230,12 +236,8 @@ export const deleteUser = async (
   }
 };
 
-
-
-
-
 interface PopulatedProduct {
-  username:string,
+  username: string;
   _id: mongoose.Types.ObjectId;
   name: string;
   imageUrl: string;
@@ -253,22 +255,23 @@ export const Orders = async (
       .populate("productIds", "name price imageUrl")
       .populate("farmerIds", "username");
 
-    const formattedOrders = orders.map((order:IOrder) => {
- const buyerName = 
-    order.customerId && 
-    typeof order.customerId === 'object' && 
-    'username' in order.customerId 
-      ? order.customerId.username 
-      : "Unknown Buyer";
+    const formattedOrders = orders.map((order: IOrder) => {
+      const buyerName =
+        order.customerId &&
+        typeof order.customerId === "object" &&
+        "username" in order.customerId
+          ? order.customerId.username
+          : "Unknown Buyer";
       const products = order.products.map((product, index) => {
-        const productData = order.productIds[index] as unknown as PopulatedProduct;
-        const imageUrl = productData?.imageUrl || '';
+        const productData = order.productIds[
+          index
+        ] as unknown as PopulatedProduct;
+        const imageUrl = productData?.imageUrl || "";
         const farmer = order.farmerIds[index];
-        const farmerName = (
-          farmer && 
-          typeof farmer === 'object' && 
-          'username' in farmer
-        ) ? farmer.username : 'Unknown Farmer';
+        const farmerName =
+          farmer && typeof farmer === "object" && "username" in farmer
+            ? farmer.username
+            : "Unknown Farmer";
 
         return {
           productName: product.name,
@@ -288,7 +291,50 @@ export const Orders = async (
 
     res.status(200).json(formattedOrders);
   } catch (error) {
-    console.error('Failed to get order overview:', error);
-    next(createHttpError(500, 'Internal server error'));
+    console.error("Failed to get order overview:", error);
+    next(createHttpError(500, "Internal server error"));
+  }
+};
+
+export const adminSetting = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const { adminName, email, password } = req.body;
+  const { userId } = req.params;
+
+  const missingFields = [];
+  if (!adminName) missingFields.push("adminName");
+  if (!email) missingFields.push("email");
+  if (!password) missingFields.push("password");
+  if (!userId) missingFields.push("userId");
+
+  if (missingFields.length > 0) {
+    return next(
+      createHttpError(
+        400,
+        `Missing required fields: ${missingFields.join(", ")}`
+      )
+    );
+  }
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const updateSetting = await User.findByIdAndUpdate(
+      {_id: userId },
+      { username: adminName, email, password: hashedPassword }
+    );
+
+    if (!updateSetting)
+      res.status(404).json({ message: "User not found", success: false });
+
+    res
+      .status(200)
+      .json({ message: "Profile updated successfully", success: true });
+    return;
+  } catch (error) {
+    console.error(error);
+    return next(createHttpError(500, "Internal server error"));
   }
 };
