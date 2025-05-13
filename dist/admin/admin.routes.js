@@ -11,4 +11,5 @@ adminRouter.get("/overview", admin_controller_1.overView);
 adminRouter.get("/manage-users", admin_controller_1.manageUsers);
 adminRouter.delete("/:id", admin_controller_1.deleteUser);
 adminRouter.patch("/:id", admin_controller_1.changeUserRole);
+adminRouter.get("/orders", admin_controller_1.Orders);
 exports.default = adminRouter;

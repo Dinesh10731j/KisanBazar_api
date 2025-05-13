@@ -32,7 +32,7 @@ const createOrderAndInitiate = (req, res, next) => __awaiter(void 0, void 0, voi
             paymentMethod,
         });
         if (paymentMethod === 'eSewa') {
-            const payload = (0, e_sewa_service_1.generateEsewaPayload)({ amount, orderId: order._id.toString() });
+            const payload = (0, e_sewa_service_1.generateEsewaPayload)({ amount, orderId: order === null || order === void 0 ? void 0 : order._id.toString() });
             res.json({
                 paymentUrl: 'https://rc-epay.esewa.com.np/api/epay/main/v2/form',
                 payload,

@@ -24,7 +24,8 @@ const Products = new mongoose_1.Schema({
     },
     farmerId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        required: true
+        required: true,
+        ref: "User",
     },
     status: {
         type: String,
