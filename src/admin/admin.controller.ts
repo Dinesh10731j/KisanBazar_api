@@ -3,7 +3,8 @@ import Order from "../payments/order.model";
 import { User } from "../users/users.model";
 import Product from "../farmer/farmer.model";
 import createHttpError from "http-errors";
-
+import { IOrder } from "../utils/types";
+import mongoose from "mongoose"
 export const adminDashBoard = async (
   req: Request,
   res: Response,
@@ -226,5 +227,68 @@ export const deleteUser = async (
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     next(error);
+  }
+};
+
+
+
+
+
+interface PopulatedProduct {
+  username:string,
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  imageUrl: string;
+  price: number;
+  quantity: number;
+}
+export const Orders = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const orders = await Order.find()
+      .populate("customerId", "username")
+      .populate("productIds", "name price imageUrl")
+      .populate("farmerIds", "username");
+
+    const formattedOrders = orders.map((order:IOrder) => {
+ const buyerName = 
+    order.customerId && 
+    typeof order.customerId === 'object' && 
+    'username' in order.customerId 
+      ? order.customerId.username 
+      : "Unknown Buyer";
+      const products = order.products.map((product, index) => {
+        const productData = order.productIds[index] as unknown as PopulatedProduct;
+        const imageUrl = productData?.imageUrl || '';
+        const farmer = order.farmerIds[index];
+        const farmerName = (
+          farmer && 
+          typeof farmer === 'object' && 
+          'username' in farmer
+        ) ? farmer.username : 'Unknown Farmer';
+
+        return {
+          productName: product.name,
+          amount: product.price * product.quantity,
+          imageUrl,
+          farmerName,
+        };
+      });
+
+      return {
+        buyerName,
+        products,
+        totalAmount: order.amount,
+        paymentStatus: order.paymentStatus,
+      };
+    });
+
+    res.status(200).json(formattedOrders);
+  } catch (error) {
+    console.error('Failed to get order overview:', error);
+    next(createHttpError(500, 'Internal server error'));
   }
 };

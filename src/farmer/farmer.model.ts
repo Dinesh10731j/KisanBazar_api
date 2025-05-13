@@ -24,7 +24,8 @@ const Products = new Schema<IProduct>({
     },
     farmerId:{
         type: Schema.Types.ObjectId,
-        required: true
+        required: true,
+        ref:"User",
     },
     status:{
         type:String,

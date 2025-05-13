@@ -23,11 +23,10 @@ export const createOrderAndInitiate = async (
       products,
       amount,
       paymentMethod,
-    
-    });
+    }) as { _id: string };
 
     if (paymentMethod === 'eSewa') {
-      const payload = generateEsewaPayload({ amount, orderId: order._id.toString() });
+      const payload = generateEsewaPayload({ amount, orderId: order?._id.toString() });
       res.json({
         paymentUrl: 'https://rc-epay.esewa.com.np/api/epay/main/v2/form',
         payload,

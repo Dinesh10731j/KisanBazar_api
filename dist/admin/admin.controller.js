@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.changeUserRole = exports.manageUsers = exports.overView = exports.adminDashBoard = void 0;
+exports.Orders = exports.deleteUser = exports.changeUserRole = exports.manageUsers = exports.overView = exports.adminDashBoard = void 0;
 const order_model_1 = __importDefault(require("../payments/order.model"));
 const users_model_1 = require("../users/users.model");
 const farmer_model_1 = __importDefault(require("../farmer/farmer.model"));
@@ -183,3 +183,44 @@ const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.deleteUser = deleteUser;
+const Orders = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const orders = yield order_model_1.default.find()
+            .populate("customerId", "username")
+            .populate("productIds", "name price imageUrl")
+            .populate("farmerIds", "username");
+        const formattedOrders = orders.map((order) => {
+            const buyerName = order.customerId &&
+                typeof order.customerId === 'object' &&
+                'username' in order.customerId
+                ? order.customerId.username
+                : "Unknown Buyer";
+            const products = order.products.map((product, index) => {
+                const productData = order.productIds[index];
+                const imageUrl = (productData === null || productData === void 0 ? void 0 : productData.imageUrl) || '';
+                const farmer = order.farmerIds[index];
+                const farmerName = (farmer &&
+                    typeof farmer === 'object' &&
+                    'username' in farmer) ? farmer.username : 'Unknown Farmer';
+                return {
+                    productName: product.name,
+                    amount: product.price * product.quantity,
+                    imageUrl,
+                    farmerName,
+                };
+            });
+            return {
+                buyerName,
+                products,
+                totalAmount: order.amount,
+                paymentStatus: order.paymentStatus,
+            };
+        });
+        res.status(200).json(formattedOrders);
+    }
+    catch (error) {
+        console.error('Failed to get order overview:', error);
+        next((0, http_errors_1.default)(500, 'Internal server error'));
+    }
+});
+exports.Orders = Orders;
