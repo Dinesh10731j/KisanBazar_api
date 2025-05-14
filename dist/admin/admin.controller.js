@@ -13,15 +13,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.adminSetting = exports.Orders = exports.deleteUser = exports.changeUserRole = exports.manageUsers = exports.overView = exports.adminDashBoard = void 0;
-const order_model_1 = __importDefault(require("../payments/order.model"));
-const users_model_1 = require("../users/users.model");
+const order_model_1 = __importDefault(require("../order/order.model"));
+const auth_model_1 = require("../auth/auth.model");
 const farmer_model_1 = __importDefault(require("../farmer/farmer.model"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const adminDashBoard = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        const totalFarmers = yield users_model_1.User.countDocuments({ role: "user" });
+        const totalFarmers = yield auth_model_1.User.countDocuments({ role: "user" });
         const totalOrders = yield order_model_1.default.countDocuments();
         const deliveredOrders = yield order_model_1.default.countDocuments({ status: "Delivered" });
         const totalRevenue = yield order_model_1.default.aggregate([
@@ -29,7 +29,7 @@ const adminDashBoard = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             { $group: { _id: null, total: { $sum: "$amount" } } },
         ]);
         const totalProducts = yield farmer_model_1.default.countDocuments();
-        const totalCustomers = yield users_model_1.User.countDocuments({ role: "user" });
+        const totalCustomers = yield auth_model_1.User.countDocuments({ role: "user" });
         const firstOrder = yield order_model_1.default.findOne().sort({ createdAt: 1 });
         if (!firstOrder) {
             res.status(200).json({
@@ -140,7 +140,7 @@ const overView = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
 exports.overView = overView;
 const manageUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const users = yield users_model_1.User.find().select("username email role");
+        const users = yield auth_model_1.User.find().select("username email role");
         res.status(200).json({
             success: true,
             users,
@@ -160,7 +160,7 @@ const changeUserRole = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         return;
     }
     try {
-        const user = yield users_model_1.User.findByIdAndUpdate(id, { role }, { new: true });
+        const user = yield auth_model_1.User.findByIdAndUpdate(id, { role }, { new: true });
         if (!user) {
             res.status(404).json({ message: "User not found." });
             return;
@@ -178,7 +178,7 @@ exports.changeUserRole = changeUserRole;
 const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
-        const user = yield users_model_1.User.findByIdAndDelete(id);
+        const user = yield auth_model_1.User.findByIdAndDelete(id);
         if (!user) {
             res.status(404).json({ message: "User not found." });
             return;
@@ -248,7 +248,7 @@ const adminSetting = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     }
     try {
         const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
-        const updateSetting = yield users_model_1.User.findByIdAndUpdate({ _id: userId }, { username: adminName, email, password: hashedPassword });
+        const updateSetting = yield auth_model_1.User.findByIdAndUpdate({ _id: userId }, { username: adminName, email, password: hashedPassword });
         if (!updateSetting)
             res.status(404).json({ message: "User not found", success: false });
         res

@@ -18,9 +18,9 @@ const farmer_model_1 = __importDefault(require("./farmer.model"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
-const users_model_1 = require("../users/users.model");
+const auth_model_1 = require("../auth/auth.model");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const order_model_1 = __importDefault(require("../payments/order.model"));
+const order_model_1 = __importDefault(require("../order/order.model"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const addProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, price, quantity, description } = req.body;
@@ -129,7 +129,7 @@ const updateProfile = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     }
     const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
     try {
-        const updatedFarmer = yield users_model_1.User.findByIdAndUpdate(userId, { username, email, password: hashedPassword }, { new: true });
+        const updatedFarmer = yield auth_model_1.User.findByIdAndUpdate(userId, { username, email, password: hashedPassword }, { new: true });
         if (!updatedFarmer) {
             return next((0, http_errors_1.default)(404, "Farmer not found"));
         }
