@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import Order from "../payments/order.model";
-import { User } from "../users/users.model";
+import Order from "../order/order.model";
+import { User } from "../auth/auth.model";
 import Product from "../farmer/farmer.model";
 import createHttpError from "http-errors";
 import { IOrder } from "../utils/types";

@@ -3,7 +3,7 @@ import Configuration from "./config/config";
 import globalErrorHandler from "./middleware/globalErrorMiddleware";
 const { PORT } = Configuration;
 import connectDB from "./config/db";
-import UserRouter from "./users/users.routes";
+import UserRouter from "./auth/auth.routes";
 import paymentRouter from "./payments/payments.route";
 import farmerRouter from "./farmer/farmer.routes";
 import adminRouter from "./admin/admin.routes";
