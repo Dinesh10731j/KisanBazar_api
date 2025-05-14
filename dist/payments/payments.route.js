@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const payments_controller_1 = require("./payments.controller");
+const order_controller_1 = require("../order/order.controller");
 const paymentRouter = (0, express_1.Router)();
-paymentRouter.post("/initiate", payments_controller_1.createOrderAndInitiate);
+paymentRouter.post("/initiate", order_controller_1.createOrderAndInitiate);
 exports.default = paymentRouter;

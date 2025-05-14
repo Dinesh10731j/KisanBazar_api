@@ -1,6 +1,6 @@
 // src/routes/userRoutes.ts
 import express from "express";
-import { registerUser, loginUser ,ContactUs} from "./users.controller";
+import { registerUser, loginUser ,ContactUs} from "./auth.controller";
 import { registerValidator, loginValidator,contactValidator } from "../validator/validator";
 import validate from "../middleware/validate";
 const UserRouter = express.Router();

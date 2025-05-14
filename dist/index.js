@@ -17,7 +17,7 @@ const config_1 = __importDefault(require("./config/config"));
 const globalErrorMiddleware_1 = __importDefault(require("./middleware/globalErrorMiddleware"));
 const { PORT } = config_1.default;
 const db_1 = __importDefault(require("./config/db"));
-const users_routes_1 = __importDefault(require("./users/users.routes"));
+const auth_routes_1 = __importDefault(require("./auth/auth.routes"));
 const payments_route_1 = __importDefault(require("./payments/payments.route"));
 const farmer_routes_1 = __importDefault(require("./farmer/farmer.routes"));
 const admin_routes_1 = __importDefault(require("./admin/admin.routes"));
@@ -34,7 +34,7 @@ server.use((0, cors_1.default)({
     credentials: true,
 }));
 // API Routes
-server.use("/api/v1/users", users_routes_1.default);
+server.use("/api/v1/users", auth_routes_1.default);
 server.use("/api/v1/payments", payments_route_1.default);
 server.use("/api/v1/farmers", farmer_routes_1.default);
 server.use("/api/v1/admin", admin_routes_1.default);

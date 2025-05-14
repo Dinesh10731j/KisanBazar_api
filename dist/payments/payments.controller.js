@@ -12,55 +12,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createOrderAndInitiate = void 0;
-const order_model_1 = __importDefault(require("./order.model"));
+exports.handleCashPayment = exports.handleKhaltiPayment = exports.handleEsewaPayment = void 0;
+const order_model_1 = __importDefault(require("../order/order.model"));
 const e_sewa_service_1 = require("./services/e-sewa.service");
 const khalti_service_1 = require("./services/khalti.service");
-const http_errors_1 = __importDefault(require("http-errors"));
-const createOrderAndInitiate = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { customerId, products, paymentMethod, amount, productIds, farmerIds } = req.body;
-        if (!customerId || !products || !paymentMethod || !amount || !productIds) {
-            return next((0, http_errors_1.default)(400, 'Missing required order fields.'));
-        }
-        const order = yield order_model_1.default.create({
-            customerId,
-            productIds,
-            farmerIds,
-            products,
-            amount,
-            paymentMethod,
-        });
-        if (paymentMethod === 'eSewa') {
-            const payload = (0, e_sewa_service_1.generateEsewaPayload)({ amount, orderId: order === null || order === void 0 ? void 0 : order._id.toString() });
-            res.json({
-                paymentUrl: 'https://rc-epay.esewa.com.np/api/epay/main/v2/form',
-                payload,
-            });
-            return;
-        }
-        const token = 12345;
-        if (paymentMethod === 'Khalti') {
-            const payload = yield (0, khalti_service_1.verifyKhaltiPayment)(amount, token);
-            res.json({
-                paymentUrl: 'https://test.khalti.com/checkout',
-                orderId: order._id,
-                payload,
-            });
-            return;
-        }
-        if (paymentMethod === 'onCash') {
-            yield order_model_1.default.findByIdAndUpdate(order._id, { paymentStatus: 'Success' });
-            res.json({
-                message: 'Cash on Delivery order placed successfully.',
-                orderId: order._id,
-            });
-            return;
-        }
-        return next((0, http_errors_1.default)(400, 'Invalid payment method'));
-    }
-    catch (error) {
-        return next(error);
-    }
+const handleEsewaPayment = (orderId, amount, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const payload = (0, e_sewa_service_1.generateEsewaPayload)({ amount, orderId });
+    res.json({
+        paymentUrl: 'https://rc-epay.esewa.com.np/api/epay/main/v2/form',
+        payload,
+    });
 });
-exports.createOrderAndInitiate = createOrderAndInitiate;
+exports.handleEsewaPayment = handleEsewaPayment;
+const handleKhaltiPayment = (orderId, amount, token, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const payload = yield (0, khalti_service_1.verifyKhaltiPayment)(amount, token);
+    res.json({
+        paymentUrl: 'https://test.khalti.com/checkout',
+        orderId,
+        payload,
+    });
+});
+exports.handleKhaltiPayment = handleKhaltiPayment;
+const handleCashPayment = (orderId, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield order_model_1.default.findByIdAndUpdate(orderId, { paymentStatus: 'Success' });
+    res.json({
+        message: 'Cash on Delivery order placed successfully.',
+        orderId,
+    });
+});
+exports.handleCashPayment = handleCashPayment;

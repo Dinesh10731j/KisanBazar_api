@@ -5,9 +5,9 @@ import cloudinary from "../config/cloudinary";
 import path from "path";
 import fs from "fs";
 import { AuthRequest } from "../utils/types";
-import { User } from "../users/users.model";
+import { User } from "../auth/auth.model";
 import bcrypt from "bcryptjs";
-import Order from "../payments/order.model";
+import Order from "../order/order.model";
 import mongoose from "mongoose";
 export const addProducts = async (
   req: Request & { file?: Express.Multer.File },
