@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserDashboard = void 0;
+exports.userOrderDetails = exports.getUserDashboard = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const order_model_1 = __importDefault(require("../order/order.model"));
 const getUserDashboard = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -26,7 +26,6 @@ const getUserDashboard = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         const lastOrderDate = orders.length > 0
             ? new Date(Math.max(...orders.map((order) => new Date(order.get("createdAt")).getTime())))
             : null;
-        // Correct quantity-based count for products
         const productCategoryCount = {};
         orders.forEach((order) => {
             var _a;
@@ -60,3 +59,36 @@ const getUserDashboard = (req, res, next) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.getUserDashboard = getUserDashboard;
+const userOrderDetails = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            return next((0, http_errors_1.default)(400, 'User ID is required.'));
+        }
+        const orders = yield order_model_1.default.find({ customerId: userId });
+        if (!orders || orders.length === 0) {
+            return next((0, http_errors_1.default)(404, 'No orders found for this user.'));
+        }
+        const orderDetails = orders.map((order) => ({
+            orderId: order.orderId || "Unknown Order ID",
+            date: order.get("createdAt"),
+            status: order.paymentStatus,
+            amount: order.amount,
+            paymentMethod: order.paymentMethod,
+            products: order.products.map((product) => ({
+                name: product.name,
+                price: product.price,
+                quantity: product.quantity
+            }))
+        }));
+        res.status(200).json({
+            success: true,
+            message: 'Order details fetched successfully.',
+            data: orderDetails
+        });
+    }
+    catch (error) {
+        next((0, http_errors_1.default)(500, error instanceof Error ? error.message : 'An unknown error occurred'));
+    }
+});
+exports.userOrderDetails = userOrderDetails;

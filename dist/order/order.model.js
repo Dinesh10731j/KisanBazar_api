@@ -28,7 +28,7 @@ const orderSchema = new mongoose_1.default.Schema({
         enum: ["Pending", "Success", "Failed"],
         default: "Pending",
     },
-    transactionId: { type: String },
+    orderId: { type: String },
 }, { timestamps: true });
 const Order = mongoose_1.default.model("Order", orderSchema);
 exports.default = Order;
