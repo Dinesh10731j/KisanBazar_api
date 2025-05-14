@@ -24,7 +24,7 @@ export const getUserDashboard = async (
           )
         : null;
 
-    // Correct quantity-based count for products
+
     const productCategoryCount: Record<string, number> = {};
     orders.forEach((order) => {
       order.products?.forEach((product) => {
@@ -55,5 +55,67 @@ export const getUserDashboard = async (
   } catch (error) {
     console.error(error);
     return next(createHttpError(500, "Internal server error"));
+  }
+};
+
+
+interface Product {
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface OrderResponse {
+  orderId: string;
+  date: Date;
+  status: string;
+  amount: number;
+  paymentMethod: 'onCash' | 'eSewa' | 'Khalti';
+  products: Product[];
+}
+
+export const userOrderDetails = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return next(createHttpError(400, 'User ID is required.'));
+    }
+
+    const orders = await Order.find({ customerId: userId });
+
+    if (!orders || orders.length === 0) {
+      return next(createHttpError(404, 'No orders found for this user.'));
+    }
+
+    const orderDetails: OrderResponse[] = orders.map((order): OrderResponse => ({
+      orderId: order.orderId || "Unknown Order ID",
+      date: order.get("createdAt"),
+      status: order.paymentStatus,
+      amount: order.amount,
+      paymentMethod: order.paymentMethod,
+      products: order.products.map((product: Product) => ({
+        name: product.name,
+        price: product.price,
+        quantity: product.quantity
+      }))
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: 'Order details fetched successfully.',
+      data: orderDetails
+    });
+  } catch (error) {
+    next(
+      createHttpError(
+        500,
+        error instanceof Error ? error.message : 'An unknown error occurred'
+      )
+    );
   }
 };

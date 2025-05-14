@@ -28,7 +28,7 @@ const orderSchema = new mongoose.Schema<IOrder>(
       enum: ["Pending", "Success", "Failed"],
       default: "Pending",
     },
-    transactionId: { type: String },
+    orderId: { type: String },
   },
   { timestamps: true }
 );

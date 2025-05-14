@@ -33,7 +33,7 @@ export interface IOrder extends Document {
   amount: number;
   paymentMethod: 'eSewa' | 'Khalti' | 'onCash';
   paymentStatus: 'Pending' | 'Success' | 'Failed';
-  transactionId?: string;
+  orderId?: string;
 }
 
 

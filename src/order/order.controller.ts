@@ -9,9 +9,9 @@ export const createOrderAndInitiate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { customerId, products, paymentMethod, amount, productIds, farmerIds } = req.body;
+    const { customerId, products, paymentMethod, amount, productIds, farmerIds,orderId } = req.body;
 
-    if (!customerId || !products || !paymentMethod || !amount || !productIds) {
+    if (!customerId || !products || !paymentMethod || !amount || !productIds || !orderId) {
       return next(createHttpError(400, 'Missing required order fields.'));
     }
 
@@ -22,6 +22,7 @@ export const createOrderAndInitiate = async (
       products,
       amount,
       paymentMethod,
+      orderId: Array.isArray(orderId) ? orderId[0] : orderId 
     }) as { _id: string };
 
     switch (paymentMethod) {
@@ -29,7 +30,7 @@ export const createOrderAndInitiate = async (
         await handleEsewaPayment(order._id.toString(), amount, res);
         return;
       case 'Khalti': {
-        const token = 12345; // Replace this with real token from frontend
+        const token = 12345; 
         await handleKhaltiPayment(order._id.toString(), amount, token, res);
         return;
       }
