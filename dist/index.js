@@ -21,6 +21,7 @@ const auth_routes_1 = __importDefault(require("./auth/auth.routes"));
 const payments_route_1 = __importDefault(require("./payments/payments.route"));
 const farmer_routes_1 = __importDefault(require("./farmer/farmer.routes"));
 const admin_routes_1 = __importDefault(require("./admin/admin.routes"));
+const user_router_1 = __importDefault(require("./user/user.router"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const server = (0, express_1.default)();
@@ -38,6 +39,7 @@ server.use("/api/v1/users", auth_routes_1.default);
 server.use("/api/v1/payments", payments_route_1.default);
 server.use("/api/v1/farmers", farmer_routes_1.default);
 server.use("/api/v1/admin", admin_routes_1.default);
+server.use("/api/v1/users/dashboard", user_router_1.default);
 server.listen(PORT, () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield (0, db_1.default)();

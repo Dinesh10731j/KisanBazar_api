@@ -3,10 +3,11 @@ import Configuration from "./config/config";
 import globalErrorHandler from "./middleware/globalErrorMiddleware";
 const { PORT } = Configuration;
 import connectDB from "./config/db";
-import UserRouter from "./auth/auth.routes";
+import AuthRouter from "./auth/auth.routes";
 import paymentRouter from "./payments/payments.route";
 import farmerRouter from "./farmer/farmer.routes";
 import adminRouter from "./admin/admin.routes";
+import userDashBoardRouter from "./user/user.router";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 const server: Express = express();
@@ -23,10 +24,12 @@ server.use(
 );
 
 // API Routes
-server.use("/api/v1/users", UserRouter);
+server.use("/api/v1/users", AuthRouter);
 server.use("/api/v1/payments", paymentRouter);
 server.use("/api/v1/farmers", farmerRouter);
 server.use("/api/v1/admin", adminRouter);
+server.use("/api/v1/users/dashboard",userDashBoardRouter);
+
 
 server.listen(PORT, async (): Promise<void> => {
   try {
