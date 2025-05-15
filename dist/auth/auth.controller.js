@@ -18,7 +18,7 @@ const auth_model_1 = require("./auth.model");
 const config_1 = __importDefault(require("../config/config"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const { Jwt_Secret } = config_1.default;
+const { Jwt_Secret, env } = config_1.default;
 const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -66,10 +66,10 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email, role: user.role }, Jwt_Secret, { expiresIn: "1h" });
         res.cookie("access_token", token, {
             httpOnly: true,
-            secure: true,
+            secure: env === 'production',
             sameSite: "none",
             path: "/",
-            maxAge: 60 * 60 * 1000
+            maxAge: 60 * 60 * 1000,
         })
             .status(200)
             .json({ message: "Login successful" });
