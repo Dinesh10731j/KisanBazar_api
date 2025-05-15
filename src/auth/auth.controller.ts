@@ -5,7 +5,8 @@ import Configuration from "../config/config";
 import createHttpError from "http-errors";
 import jwt from "jsonwebtoken";
 
-const { Jwt_Secret } = Configuration;
+
+const { Jwt_Secret,env } = Configuration;
 
 export const registerUser = async (
   req: Request,
@@ -76,10 +77,10 @@ export const loginUser = async (
 
     res.cookie("access_token", token, {
       httpOnly:true,
-      secure: true,
+      secure: env === 'production',
       sameSite: "none", 
       path: "/",
-      maxAge: 60 * 60 * 1000 
+      maxAge: 60 * 60 * 1000,
     })
     .status(200)
     .json({ message: "Login successful" });
