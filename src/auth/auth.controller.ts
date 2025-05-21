@@ -38,9 +38,10 @@ export const registerUser = async (
     res.status(201).json({ message: "User registered successfully" });
   } catch (error: unknown) {
     if (error instanceof Error) {
-    return next(createHttpError(500, "Server error"));
+    console.error("Login Error:", error); // 👈 LOG THIS!
+  return next(createHttpError(500, error instanceof Error ? error.message : "Unknown server error"));
     }
-    return next(createHttpError(500, "Server error"));
+   
 
   }
 };

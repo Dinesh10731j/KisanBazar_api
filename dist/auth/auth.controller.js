@@ -41,9 +41,9 @@ const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     }
     catch (error) {
         if (error instanceof Error) {
-            return next((0, http_errors_1.default)(500, "Server error"));
+            console.error("Login Error:", error); // 👈 LOG THIS!
+            return next((0, http_errors_1.default)(500, error instanceof Error ? error.message : "Unknown server error"));
         }
-        return next((0, http_errors_1.default)(500, "Server error"));
     }
 });
 exports.registerUser = registerUser;
