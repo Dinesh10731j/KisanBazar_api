@@ -12,9 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userOrderDetails = exports.getUserDashboard = void 0;
+exports.handleForgotPassword = exports.userOrderDetails = exports.getUserDashboard = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const order_model_1 = __importDefault(require("../order/order.model"));
+const nodemailer_1 = require("../services/nodemailer");
+const auth_model_1 = require("../auth/auth.model");
+const crypto_1 = __importDefault(require("crypto"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const getUserDashboard = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.params.userId;
@@ -92,3 +96,32 @@ const userOrderDetails = (req, res, next) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.userOrderDetails = userOrderDetails;
+const handleForgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return next((0, http_errors_1.default)(400, "Email is required."));
+        }
+        const user = yield auth_model_1.User.findOne({ email });
+        if (!user) {
+            return next((0, http_errors_1.default)(404, "User with this email does not exist."));
+        }
+        // Generate random password
+        const temporaryPassword = crypto_1.default.randomBytes(4).toString("hex"); // 8-character random password
+        // Hash the password using bcrypt
+        const hashedPassword = yield bcryptjs_1.default.hash(temporaryPassword, 10);
+        // Update user password in DB
+        user.password = hashedPassword;
+        yield user.save();
+        // Send the temporary password via email
+        yield (0, nodemailer_1.sendForgotPasswordEmail)(email, temporaryPassword);
+        res.status(200).json({
+            message: "A new temporary password has been sent to your email.",
+        });
+    }
+    catch (error) {
+        console.error("Forgot Password Error:", error);
+        return next((0, http_errors_1.default)(500, error instanceof Error ? error.message : "Something went wrong."));
+    }
+});
+exports.handleForgotPassword = handleForgotPassword;

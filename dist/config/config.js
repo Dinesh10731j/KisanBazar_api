@@ -12,6 +12,8 @@ const Configuration = {
     Cloudinary_Api_Key: process.env.CLOUDINARY_API_KEY,
     Cloudinary_Api_Secret: process.env.CLOUDINARY_API_SECRET,
     Khalti_Public_Key: process.env.KHALTI_SECRET_KEY,
+    Gmail_Pass: process.env.GMAIL_PASS,
+    Gmail_User: process.env.GMAIL_USER
 };
 Object.freeze(Configuration);
 exports.default = Configuration;
