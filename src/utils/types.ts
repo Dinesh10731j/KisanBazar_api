@@ -1,5 +1,5 @@
-import { Document } from "mongoose";
-import { Types } from "mongoose";
+import { Document,Types} from "mongoose";
+
 export interface IUser extends Document {
   username:string,
     email: string;
@@ -55,3 +55,31 @@ export interface IOrder extends Document {
    
   }
   
+
+  export interface ILocation extends Document {
+    orderId: Types.ObjectId;
+    userId: Types.ObjectId;
+    farmerId: Types.ObjectId;
+    userLocation?: {
+      lat: number;
+      lng: number;
+    };
+    farmerLocation?: {
+      lat: number;
+      lng: number;
+    };
+    isDelivered: boolean;
+    updatedAt: Date;
+  }
+
+
+  //Update Location Body Interface
+  
+  export interface UpdateLocationBody {
+    orderId: string;
+    role: 'user' | 'farmer';
+    location: {
+      lat: number;
+      lng: number;
+    };
+  }
